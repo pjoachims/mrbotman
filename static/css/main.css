@@ -1,1 +1,25 @@
-h1{color:orange;background-color:#00008b;text-align:center;padding:10px}@media(max-width: 640px){input,textarea,button{font-size:16px !important}.container{padding:1rem}}.hash-text.blur{filter:blur(4px)}textarea{padding-right:5rem !important}/*# sourceMappingURL=main.css.map */
+h1 {
+    color: orange;
+    background-color: darkblue;
+    text-align: center;
+    padding: 10px;
+  }
+
+  @media (max-width: 640px) {
+    input, textarea, button {
+      font-size: 16px !important; /* Prevents zoom on iOS */
+    }
+    
+    .container {
+      padding: 1rem;
+    }
+  }
+  
+  .hash-text.blur {
+    filter: blur(4px);
+  }
+  
+  textarea {
+    padding-right: 5rem !important;
+  }
+/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uL3NyYy9zdGF0aWMvY3NzL21haW4uY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBIiwiZmlsZSI6Im1haW4uY3NzIiwic291cmNlc0NvbnRlbnQiOlsiaDEge1xuICAgIGNvbG9yOiBvcmFuZ2U7XG4gICAgYmFja2dyb3VuZC1jb2xvcjogZGFya2JsdWU7XG4gICAgdGV4dC1hbGlnbjogY2VudGVyO1xuICAgIHBhZGRpbmc6IDEwcHg7XG4gIH1cblxuICBAbWVkaWEgKG1heC13aWR0aDogNjQwcHgpIHtcbiAgICBpbnB1dCwgdGV4dGFyZWEsIGJ1dHRvbiB7XG4gICAgICBmb250LXNpemU6IDE2cHggIWltcG9ydGFudDsgLyogUHJldmVudHMgem9vbSBvbiBpT1MgKi9cbiAgICB9XG4gICAgXG4gICAgLmNvbnRhaW5lciB7XG4gICAgICBwYWRkaW5nOiAxcmVtO1xuICAgIH1cbiAgfVxuICBcbiAgLmhhc2gtdGV4dC5ibHVyIHtcbiAgICBmaWx0ZXI6IGJsdXIoNHB4KTtcbiAgfVxuICBcbiAgdGV4dGFyZWEge1xuICAgIHBhZGRpbmctcmlnaHQ6IDVyZW0gIWltcG9ydGFudDtcbiAgfSJdfQ== */
