@@ -30,4 +30,4 @@ jobs:
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.TEST }}
+          github_token: ${{ secrets.PAT }}
