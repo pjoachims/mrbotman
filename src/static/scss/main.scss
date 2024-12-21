@@ -4,3 +4,21 @@ h1 {
     text-align: center;
     padding: 10px;
   }
+
+  @media (max-width: 640px) {
+    input, textarea, button {
+      font-size: 16px !important; /* Prevents zoom on iOS */
+    }
+    
+    .container {
+      padding: 1rem;
+    }
+  }
+  
+  .hash-text.blur {
+    filter: blur(4px);
+  }
+  
+  textarea {
+    padding-right: 5rem !important;
+  }
