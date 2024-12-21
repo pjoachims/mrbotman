@@ -1,12 +1,12 @@
 ---
 layout: 'base.njk'
 permalink: /
-title: 'My Eleventy Website'
+title: 'Domo arigato, Mr Botman'
 ---
 <!---
 https://maarten.be/blog/20220730/how-to-deploy-your-eleventy-website-to-github-pages-with-github-actions/
 -->
 
-# Hello World!
+# Welcome to mrbotman
 
-This is fantastic!!!ß
+A simple Eleventy-powered website with hash generator. Still works?
