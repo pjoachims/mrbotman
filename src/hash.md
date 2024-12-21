@@ -1,6 +1,5 @@
 ---
 layout: base.njk
-permalink: /hash.html
 ---
 <div class="min-h-screen bg-gray-100">
   <div class="container mx-auto p-8 max-w-2xl">
