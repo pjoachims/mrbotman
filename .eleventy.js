@@ -17,6 +17,14 @@ module.exports = function (eleventyConfig) {
     `;
   });
 
+  // Pass through JavaScript files from shopping directory
+  eleventyConfig.addPassthroughCopy({
+    "src/shopping/js": "static/js/shopping"
+  });
+
+  // Add watch target for JS files
+  eleventyConfig.addWatchTarget("./src/shopping/js/");
+
   return {
     dir: {
       input: 'src',
