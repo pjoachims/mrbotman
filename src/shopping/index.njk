@@ -35,18 +35,6 @@
       max-height: 1000px;
       opacity: 1;
     }
-    @media (max-width: 640px) {
-      body {
-        font-size: 0.875rem; /* smaller text on smartphones */
-        padding: 0.5rem; /* smaller body padding */
-      }
-      .items-container {
-        gap: 0.25rem; /* reduced gap on small screens */
-      }
-      .items-container > * {
-        margin: 0;
-      }
-    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex justify-center pt-2 overflow-x-hidden">
@@ -140,11 +128,16 @@
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
           </button>
-          <button class="text-gray-500 hover:text-gray-600 transition-colors add-item">
+          <button class="text-gray-500 hover:text-gray-600 transition-colors add-item mr-2">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
               <line x1="12" y1="8" x2="12" y2="16"/>
               <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+          </button>
+          <button class="text-red-400 hover:text-red-500 transition-colors delete-section">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
             </svg>
           </button>
         </div>
@@ -182,6 +175,7 @@
         this.doneColor = document.getElementById('done-color');
         this.columnsSelect = document.getElementById('columns-select');
         this.textSizeSelect = document.getElementById('text-size-select');
+        this.STORAGE_KEY = 'shopping-list-data';
         this.init();
       }
 
@@ -208,7 +202,23 @@
         
         window.addEventListener('resize', () => this.updateLayout());
         
-        this.loadInitialSections();
+        // Load saved settings
+        this.loadSettings();
+        
+        // Instead of loadInitialSections, load from storage or use defaults
+        const savedData = this.loadFromStorage();
+        if (savedData) {
+          this.loadSavedSections(savedData.sections);
+        } else {
+          this.loadInitialSections();
+        }
+        
+        // Save settings when changed
+        this.notDoneColor.addEventListener('change', () => this.saveSettings());
+        this.doneColor.addEventListener('change', () => this.saveSettings());
+        this.columnsSelect.addEventListener('change', () => this.saveSettings());
+        this.textSizeSelect.addEventListener('change', () => this.saveSettings());
+        
         this.updateToggleColors();
         this.updateLayout();
       }
@@ -218,38 +228,40 @@
         const containers = document.querySelectorAll('.items-container');
         
         containers.forEach(container => {
-          // Calculate item width based on container width
           const containerWidth = container.offsetWidth;
           const columnGap = 16; // 1rem = 16px
-          const totalGaps = (columns - 1) * columnGap;
-          const itemWidth = (containerWidth - totalGaps) / columns;
+          const totalGaps = Math.max(0, columns - 1) * columnGap;
+          const itemWidth = Math.floor((containerWidth - totalGaps) / columns);
           
           container.style.display = 'grid';
-          container.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
+          container.style.gridTemplateColumns = `repeat(${columns}, minmax(0, ${itemWidth}px))`;
           container.style.gap = '1rem';
+          container.style.justifyContent = 'start'; // Align items to the start
           
-          // Adjust item styling
           const items = container.children;
           for (let item of items) {
+            item.style.width = `${itemWidth}px`;
             item.style.maxWidth = `${itemWidth}px`;
             
             const input = item.querySelector('[data-item-input]');
             const toggle = item.querySelector('.relative');
             const deleteBtn = item.querySelector('.delete-item');
             
-            // Adjust input width 
-            const toggleWidth = 40; // Decreased toggle width
-            const deleteBtnWidth = 24; // Decreased delete button width
-            const padding = 8; // Decreased padding
-            const inputWidth = itemWidth - toggleWidth - deleteBtnWidth - padding;
+            // Fixed widths for components
+            const toggleWidth = 40;
+            const deleteBtnWidth = 24;
+            const padding = 8;
+            const inputWidth = itemWidth - toggleWidth - deleteBtnWidth - (padding * 2);
             
-            input.style.maxWidth = `${inputWidth}px`;
             input.style.width = `${inputWidth}px`;
+            input.style.maxWidth = `${inputWidth}px`;
+            input.style.minWidth = `${inputWidth}px`; // Add minWidth to prevent shrinking
           }
         });
         
         this.updateToggleColors();
       }
+
       updateTextSize() {
         const inputs = document.querySelectorAll('[data-item-input]');
         inputs.forEach(input => {
@@ -260,22 +272,26 @@
 
   updateToggleColors() {
     document.querySelectorAll('.toggle-bg').forEach(bg => {
-      const checkbox = bg.closest('label').querySelector('input[type="checkbox"]');
+      const wrapper = bg.closest('.relative');
+      const checkbox = wrapper.querySelector('input[type="checkbox"]');
       bg.style.backgroundColor = checkbox.checked ? this.doneColor.value : this.notDoneColor.value;
     });
   }
 
   initializeToggle(item) {
-    const checkbox = item.querySelector('input[type="checkbox"]');
-    const handle = item.querySelector('.toggle-handle');
-    const bg = item.querySelector('.toggle-bg');
+    const wrapper = item.querySelector('.relative');
+    const checkbox = wrapper.querySelector('input[type="checkbox"]');
+    const handle = wrapper.querySelector('.toggle-handle');
+    const bg = wrapper.querySelector('.toggle-bg');
     
     bg.style.backgroundColor = this.notDoneColor.value;
     
-    checkbox.addEventListener('change', () => {
+    wrapper.addEventListener('click', () => {
+      checkbox.checked = !checkbox.checked;
       handle.style.transform = checkbox.checked ? 'translateX(16px)' : 'translateX(0)';
       item.querySelector('[data-item-input]').style.textDecoration = checkbox.checked ? 'line-through' : 'none';
       bg.style.backgroundColor = checkbox.checked ? this.doneColor.value : this.notDoneColor.value;
+      checkbox.dispatchEvent(new Event('change'));
     });
   }
 
@@ -284,139 +300,216 @@
     this.addSection('Meat & Dairy', ['Milk', 'Cheese']);
   }
 
-
-  
-addSection(title = 'New Section', items = []) {
-  const template = document.getElementById('section-template');
-  const section = template.content.cloneNode(true).children[0];
-  
-  const titleInput = section.querySelector('input');
-  titleInput.value = title;
-  titleInput.setAttribute('readonly', true);
-  
-  const header = section.querySelector('.section-header');
-  const itemsContainer = section.querySelector('.items-container');
-  const editBtn = section.querySelector('.edit-section');
-  const chevron = header.querySelector('svg');
-
-  // Start expanded if it's a new section, collapsed otherwise
-  if (title === 'New Section') {
-    itemsContainer.classList.remove('hidden');
-    chevron.style.transform = 'rotate(-180deg)';
-  } else {
-    itemsContainer.classList.add('hidden');
-    chevron.style.transform = 'rotate(0deg)';
+  saveSettings() {
+    const settings = {
+      notDoneColor: this.notDoneColor.value,
+      doneColor: this.doneColor.value,
+      columns: this.columnsSelect.value,
+      textSize: this.textSizeSelect.value
+    };
+    localStorage.setItem('shopping-list-settings', JSON.stringify(settings));
   }
 
-  header.addEventListener('click', (e) => {
-    // Don't toggle if clicking edit button or add item button
-    if (e.target.closest('.edit-section') || e.target.closest('.add-item')) return;
-    // Don't toggle if editing title
-    if (!titleInput.hasAttribute('readonly')) return;
+  loadSettings() {
+    const settings = JSON.parse(localStorage.getItem('shopping-list-settings'));
+    if (settings) {
+      this.notDoneColor.value = settings.notDoneColor;
+      this.doneColor.value = settings.doneColor;
+      this.columnsSelect.value = settings.columns;
+      this.textSizeSelect.value = settings.textSize;
+      
+      // Update previews
+      document.getElementById('not-done-preview').style.backgroundColor = settings.notDoneColor;
+      document.getElementById('done-preview').style.backgroundColor = settings.doneColor;
+    }
+  }
+
+  saveToStorage() {
+    const sections = Array.from(this.container.children).map(section => {
+      const items = Array.from(section.querySelectorAll('[data-item-input]')).map(input => ({
+        text: input.value,
+        checked: input.closest('.w-full').querySelector('input[type="checkbox"]').checked
+      }));
+      
+      return {
+        title: section.querySelector('.section-header input').value,
+        items,
+        isExpanded: !section.querySelector('.items-container').classList.contains('hidden')
+      };
+    });
+
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify({ sections }));
+  }
+
+  loadFromStorage() {
+    const data = localStorage.getItem(this.STORAGE_KEY);
+    return data ? JSON.parse(data) : null;
+  }
+
+  loadSavedSections(sections) {
+    sections.forEach(sectionData => {
+      const section = this.addSection(sectionData.title, []); // Pass empty array first
+      const container = section.querySelector('.items-container');
+      
+      // Add saved items
+      if (sectionData.items.length > 0) {
+        sectionData.items.forEach(item => {
+          const itemElement = this.addItem(container, item.text);
+          const checkbox = itemElement.querySelector('input[type="checkbox"]');
+          if (item.checked) {
+            checkbox.checked = true;
+            checkbox.dispatchEvent(new Event('change'));
+          }
+        });
+      }
+
+      // Handle expanded state
+      if (!sectionData.isExpanded) {
+        container.classList.add('hidden');
+        section.querySelector('.section-header svg').style.transform = 'rotate(0deg)';
+      }
+    });
+  }
+
+  addSection(title = 'New Section', items = []) {
+    const template = document.getElementById('section-template');
+    const section = template.content.cloneNode(true).children[0];
     
-    itemsContainer.classList.toggle('hidden');
-    chevron.style.transform = itemsContainer.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(-180deg)';
-
-    // If opening the section, ensure proper layout
-    if (!itemsContainer.classList.contains('hidden')) {
-      setTimeout(() => this.updateLayout(), 300); // Wait for transition
-    }
-  });
-
-  // Show container if adding initial items
-  if (items.length > 0) {
-    itemsContainer.classList.remove('hidden');
-    chevron.style.transform = 'rotate(-180deg)';
-  }
-
-  // Edit button functionality
-  editBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    titleInput.removeAttribute('readonly');
-    titleInput.focus();
-    titleInput.select();
-    editBtn.classList.add('text-blue-500', 'bg-blue-100');
-  });
-
-  // Handling title input during edit
-  titleInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      titleInput.setAttribute('readonly', true);
-      editBtn.classList.remove('text-blue-500', 'bg-blue-100');
-      e.preventDefault();
-    }
-  });
-
-  titleInput.addEventListener('blur', () => {
+    const titleInput = section.querySelector('input');
+    titleInput.value = title;
     titleInput.setAttribute('readonly', true);
-    editBtn.classList.remove('text-blue-500', 'bg-blue-100');
-  });
+    
+    const header = section.querySelector('.section-header');
+    const itemsContainer = section.querySelector('.items-container');
+    const editBtn = section.querySelector('.edit-section');
+    const addItemBtn = section.querySelector('.add-item');
+    const chevron = header.querySelector('svg');
 
-  const addItemBtn = section.querySelector('.add-item');
-  addItemBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    this.addItem(itemsContainer);
-  });
-
-  items.forEach(item => this.addItem(itemsContainer, item));
-  
-  if (items.length === 0) {
-    this.addItem(itemsContainer);
-  }
-  
-  this.container.appendChild(section);
-
-  if (title === 'New Section') {
-    editBtn.click();
-  }
-  
-  return section;
-}
-
-addItem(container, value = '') {
-  const template = document.getElementById('item-template');
-  const item = template.content.cloneNode(true).children[0];
-  const input = item.querySelector('[data-item-input]');
-  const deleteBtn = item.querySelector('.delete-item');
-  const checkbox = item.querySelector('input[type="checkbox"]');
-  const handle = item.querySelector('.toggle-handle');
-  const bg = item.querySelector('.toggle-bg');
-  const toggleContainer = item.querySelector('.relative');
-  
-  input.value = value;
-  input.className = `flex-1 px-2 h-6 rounded-full text-xs focus:outline-none bg-white`; // Removed border and added focus:outline-none
-  bg.style.backgroundColor = this.notDoneColor.value;
-
-  // Modify toggle interaction
-  toggleContainer.addEventListener('click', () => {
-    checkbox.checked = !checkbox.checked;
-    checkbox.dispatchEvent(new Event('change'));
-  });
-
-  checkbox.addEventListener('change', () => {
-    handle.style.transform = checkbox.checked ? 'translateX(16px)' : 'translateX(0)';
-    input.style.textDecoration = checkbox.checked ? 'line-through' : 'none';
-    bg.style.backgroundColor = checkbox.checked ? this.doneColor.value : this.notDoneColor.value;
-  });
-
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      this.addItem(container);
+    // Start expanded if it's a new section, collapsed otherwise
+    if (title === 'New Section') {
+      itemsContainer.classList.remove('hidden');
+      chevron.style.transform = 'rotate(-180deg)';
+    } else {
+      itemsContainer.classList.remove('hidden'); // Changed: Always start expanded for initial sections
+      chevron.style.transform = 'rotate(-180deg)';
     }
-  });
 
-  deleteBtn.addEventListener('click', () => {
-    item.remove();
-  });
+    header.addEventListener('click', (e) => {
+      // Don't toggle if clicking edit button or add item button
+      if (e.target.closest('.edit-section') || e.target.closest('.add-item')) return;
+      // Don't toggle if editing title
+      if (!titleInput.hasAttribute('readonly')) return;
+      
+      itemsContainer.classList.toggle('hidden');
+      chevron.style.transform = itemsContainer.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(-180deg)';
 
-  container.appendChild(item);
-  
-  // Delay layout update to ensure DOM is updated
-  setTimeout(() => this.updateLayout(), 0);
-  
-  input.focus();
-  return item;
-}
+      // If opening the section, ensure proper layout
+      if (!itemsContainer.classList.contains('hidden')) {
+        setTimeout(() => this.updateLayout(), 300); // Wait for transition
+      }
+      this.saveToStorage();
+    });
+
+    // Edit button functionality
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      titleInput.removeAttribute('readonly');
+      titleInput.focus();
+      titleInput.select();
+    });
+
+    // Add item button functionality
+    addItemBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      itemsContainer.classList.remove('hidden');
+      chevron.style.transform = 'rotate(-180deg)';
+      this.addItem(itemsContainer);
+    });
+
+    // Handle title input
+    titleInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        titleInput.setAttribute('readonly', true);
+        this.saveToStorage();
+      }
+    });
+
+    titleInput.addEventListener('blur', () => {
+      titleInput.setAttribute('readonly', true);
+      this.saveToStorage();
+    });
+
+    // Add delete button functionality
+    const deleteBtn = section.querySelector('.delete-section');
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (confirm('Are you sure you want to delete this section and all its items?')) {
+        section.remove();
+        this.saveToStorage();
+      }
+    });
+
+    // Add initial items
+    items.forEach(item => this.addItem(itemsContainer, item));
+    
+    // Only add empty item for brand new sections
+    if (items.length === 0 && title === 'New Section') {
+      this.addItem(itemsContainer);
+    }
+    
+    this.container.appendChild(section);
+
+    if (title === 'New Section') {
+      editBtn.click();
+    }
+
+    // Add mutation observer to save changes
+    const observer = new MutationObserver(() => this.saveToStorage());
+    observer.observe(section, { 
+      subtree: true, 
+      childList: true, 
+      characterData: true,
+      attributes: true 
+    });
+
+    // Ensure layout is updated after adding items
+    setTimeout(() => this.updateLayout(), 0);
+    
+    return section;
+  }
+
+  addItem(container, value = '') {
+    const template = document.getElementById('item-template');
+    const item = template.content.cloneNode(true).children[0];
+    const input = item.querySelector('[data-item-input]');
+    const deleteBtn = item.querySelector('.delete-item');
+    const checkbox = item.querySelector('input[type="checkbox"]');
+    
+    input.value = value;
+    this.initializeToggle(item);
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        this.addItem(container);
+      }
+    });
+
+    deleteBtn.addEventListener('click', () => {
+      item.remove();
+      this.saveToStorage();
+    });
+
+    // Save when item is modified
+    input.addEventListener('change', () => this.saveToStorage());
+    input.addEventListener('blur', () => this.saveToStorage());
+    checkbox.addEventListener('change', () => this.saveToStorage());
+
+    container.appendChild(item);
+    setTimeout(() => this.updateLayout(), 0);
+    input.focus();
+    
+    return item;
+  }
 }
 
 new ShoppingList();
