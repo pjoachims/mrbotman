@@ -5,7 +5,10 @@ module.exports = function (eleventyConfig) {
   });
 
   // Copy assets for Pawsome veterinary clinic
-  eleventyConfig.addPassthroughCopy({'src/pawsome/assets': 'pawsome/assets'});  
+  eleventyConfig.addPassthroughCopy({'src/pawsome/assets': 'pawsome/assets'});
+
+  // Copy kanban2d application
+  eleventyConfig.addPassthroughCopy({'kanban2d': 'kanban2d'});  
 
   // Add markdown image shortcode for easier image handling
   eleventyConfig.addShortcode('image', function(src, alt, caption) {
