@@ -7,8 +7,8 @@ module.exports = function (eleventyConfig) {
   // Copy assets for Pawsome veterinary clinic
   eleventyConfig.addPassthroughCopy({'src/pawsome/assets': 'pawsome/assets'});
 
-  // Copy kanban2d application
-  eleventyConfig.addPassthroughCopy({'kanban2d': 'kanban2d'});  
+  // Copy kanban-x-pom application
+  eleventyConfig.addPassthroughCopy({'kanban-x-pom': 'kanban-x-pom'});  
 
   // Add markdown image shortcode for easier image handling
   eleventyConfig.addShortcode('image', function(src, alt, caption) {
@@ -19,14 +19,6 @@ module.exports = function (eleventyConfig) {
       </figure>
     `;
   });
-
-  // Pass through JavaScript files from shopping directory
-  eleventyConfig.addPassthroughCopy({
-    "src/shopping/js": "static/js/shopping"
-  });
-
-  // Add watch target for JS files
-  eleventyConfig.addWatchTarget("./src/shopping/js/");
 
   return {
     dir: {
